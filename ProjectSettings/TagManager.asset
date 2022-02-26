@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - player
+  - ground
+  - wall
+  - bullet
+  - player_agent
+  - label
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - AR_UI
+  - player
+  - label
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - byLabel0
+  - byLabel1
+  - byLabel2
+  - byLabel3
+  - byLabel4
+  - byLabel5
+  - byLabel6
+  - byLabel7
+  - byLabel8
+  - byLabel9
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
