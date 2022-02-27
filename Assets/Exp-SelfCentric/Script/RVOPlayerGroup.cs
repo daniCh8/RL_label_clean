@@ -51,7 +51,7 @@ public class RVOPlayerGroup : MonoBehaviour
         int maxPlayers = Mathf.Min(positions.Count(), 20);
         for(int i = 0; i < maxPlayers; ++i)
         {
-            this.CreatePlayerLabelFromPos(i, positions[i].ToArray());
+            CreatePlayerLabelFromPos(i, positions[i].ToArray());
         }
         // max velocity
         Vector3 maxVel = Vector3.zero;
@@ -117,22 +117,16 @@ public class RVOPlayerGroup : MonoBehaviour
         player.sid = sid;
         m_playerMap.Add(player);
 
+
+        /*
         Transform label = playerObj.gameObject.transform.Find("label");
         label.name = sid + "_label";
 
         Debug.Log("Finish initialize " + label.name);
         var name = label.Find("panel/Player_info/Name").GetComponent<TMPro.TextMeshProUGUI>();
         name.text = Random.Range(10, 99).ToString();
+        
         var iamge = label.Find("panel/Player_info").GetComponent<Image>();
-
-        RVOLabelAgent agent = player.GetComponentInChildren<RVOLabelAgent>();
-        agent.PlayerLabel = player;
-        agent.court = court;
-        agent.cam = cam;
-        agent.minZInCam = minZInCam;
-        agent.maxZInCam = maxZInCam;
-
-
         iamge.sprite = (sid % 2 == 0) ? blueLabel : redLabel;
 
         if (sid % 2 != 0)
@@ -140,8 +134,8 @@ public class RVOPlayerGroup : MonoBehaviour
             Color color = new Color(239f / 255f, 83f / 255f, 80f / 255f);
             var cubeRenderer = player.player.GetComponent<Renderer>();
             cubeRenderer.material.SetColor("_Color", color);
-            //agent.minY = 1.2f;
         }
+        */
     }
 
     // Update is called once per frame
@@ -173,7 +167,8 @@ public class RVOPlayerGroup : MonoBehaviour
 
         // -----------> EVALUATION <------------ save occlusion rate
         // calculate occlusion rate here
-        if (m_RVOSettings.evaluate)
+        if (false)
+        //if (m_RVOSettings.evaluate)
         {
             GameObject[] occluded = m_playerMap
                 .SelectMany(p => p.GetComponentInChildren<RVOLabelAgent>().occluding())
