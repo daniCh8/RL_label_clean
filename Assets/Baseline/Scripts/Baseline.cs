@@ -11,10 +11,18 @@ public class Baseline : MonoBehaviour
     public Material[] middleMats;
     private List<GameObject[]> labelsCorners, labelsMiddles;
     private Vector3 sphereScale = new Vector3(.3f, .3f, .3f);
-    private bool spheresInit = false, hideSpheres = true, toInit = false;
+    private bool spheresInit = false, toInit = false;
+    public bool hideSpheres;
     private float yThreshold = 3f, step = .2f, bigStep = 2f,
         positiveStep, negativeStep, movementSpeed = .25f;
-    public int algo;
+
+    public enum UpdateAlgo
+    {
+        OneDim,
+        ThreeDim,
+        PlaneBased
+    }
+    public UpdateAlgo algo;
 
     private void Start()
     {
@@ -30,17 +38,33 @@ public class Baseline : MonoBehaviour
             return;
         }
         UpdateSpheres();
+
+        foreach (var l in labels)
+        {
+            l.transform.LookAt(Camera.main.transform.position);
+        }
+
         switch (algo)
         {
-            case 1:
+            case UpdateAlgo.OneDim:
+                LabelsAlgorithmOneDim();
+                break;
+            case UpdateAlgo.ThreeDim:
                 LabelsAlgorithmThreeDim();
                 break;
-            case 2:
-                break;
-            default:
+            case UpdateAlgo.PlaneBased:
                 LabelsAlgorithmOneDim();
                 break;
         }
+    }
+
+    public void InitFrom(List<GameObject> lG, List<GameObject> l)
+    {
+        labelGroups = lG;
+        labels = l;
+
+        StartHelper();
+        ResetPositions();
     }
 
     public void Init(List<GameObject> players)
@@ -82,7 +106,7 @@ public class Baseline : MonoBehaviour
         negativeStep = -1 * step;
         foreach (var l in labelGroups)
         {
-            l.GetComponent<LabelFollowPlayer>().followX = (algo == 0);
+            l.GetComponentInChildren<LabelFollowPlayer>().followX = (algo == 0);
         }
         spheresInit = false;
         labelsCorners = new List<GameObject[]>();
@@ -95,7 +119,7 @@ public class Baseline : MonoBehaviour
     {
         foreach (var l in labelGroups)
         {
-            l.GetComponent<LabelFollowPlayer>().ResetPosition();
+            l.GetComponentInChildren<LabelFollowPlayer>().ResetPosition();
         }
         UpdateSpheres();
     }
@@ -156,11 +180,9 @@ public class Baseline : MonoBehaviour
                     // Debug.LogFormat("{0} collided with --> name: {1}, tag: {2}",
                         // t.name, hit.collider.name, hit.collider.tag);
                 }
-                if (hit.transform.gameObject.name != myName &&
-                    !hit.collider.CompareTag("wall") && hit.collider.name != "Field" &&
-                    !hit.collider.name.StartsWith("Goal") && !hit.collider.CompareTag("court"))
+                if (hit.transform.gameObject.name != myName)
                 {
-                    if (!hit.collider.name.StartsWith("bg"))
+                    if (!hit.collider.name.StartsWith("label"))
                     {
                         // Debug.LogFormat("name: {0}, tag: {1}", hit.collider.name, hit.collider.tag);
                     }
@@ -179,8 +201,8 @@ public class Baseline : MonoBehaviour
             counter = 10;
         while(cornerHit != -1 && counter > 0)
         {
-            Vector3 oldPosition = labelGroups[lId].transform.position;
-            if (cornerHit == 4 || labelGroups[lId].transform.position.y < yThreshold)
+            Vector3 oldPosition = labels[lId].transform.position;
+            if (cornerHit == 4 || labels[lId].transform.position.y < yThreshold)
             {
                 yUpdate = bigStep;
                 xUpdate = 0;
@@ -263,7 +285,7 @@ public class Baseline : MonoBehaviour
                 }
             }
             yUpdate = oldPosition.y < 1f ? bigStep : yUpdate;
-            Movement(labelGroups[lId], xUpdate, yUpdate);
+            Movement(labels[lId], xUpdate, yUpdate);
             UpdateSpheres();
             cornerHit = CheckHitFromCorners(labelsCorners[lId], labels[lId].name, draw);
             counter--;
@@ -293,36 +315,41 @@ public class Baseline : MonoBehaviour
             {
                 yUpdate = cornerHit < 2 ? .5f : -.5f;
             }
-            if (cornerHit == 4 || labelGroups[lId].transform.position.y < yThreshold)
+            if (cornerHit == 4 || labels[lId].transform.position.y < yThreshold)
             {
                 yUpdate = bigStep;
             }
-            Vector3 oldPosition = labelGroups[lId].transform.position;
+            Vector3 oldPosition = labels[lId].transform.position;
             yUpdate = oldPosition.y < 1f ? bigStep : yUpdate;
-            Movement(labelGroups[lId], 0f, yUpdate);
+            Movement(labels[lId], 0f, yUpdate);
             UpdateSpheres();
             cornerHit = CheckHitFromCorners(labelsCorners[lId], labels[lId].name, draw);
             counter--;
         }
     }
 
-    private Vector3[] Corners(Renderer r)
+    private Bounds GetBounds(GameObject o)
     {
-        Vector3 min = r.bounds.min, max = r.bounds.max;
+        return o.GetComponentInChildren<BoxCollider>().bounds;
+    }
+
+    private Vector3[] Corners(Bounds bounds)
+    {
+        Vector3 min = bounds.min, max = bounds.max;
         float z = (min.z + max.z) / 2;
         Vector3[] corners = new Vector3[] {
             new Vector3(min.x, min.y, z),
             new Vector3(max.x, min.y, z),
             new Vector3(min.x, max.y, z),
             new Vector3(max.x, max.y, z),
-            r.bounds.center
+            bounds.center
         };
         return corners;
     }
 
-    private Vector3[] Middles(Renderer r)
+    private Vector3[] Middles(Bounds bounds)
     {
-        Vector3 min = r.bounds.min, max = r.bounds.max;
+        Vector3 min = bounds.min, max = bounds.max;
         float z = (min.z + max.z) / 2,
             mid_x = (min.x + max.x) / 2,
             mid_y = (min.y + max.y) / 2;
@@ -341,7 +368,7 @@ public class Baseline : MonoBehaviour
         int i = 0;
         foreach (var l in labels)
         {
-            Vector3[] lCorners = Corners(l.GetComponent<Renderer>());
+            Vector3[] lCorners = Corners(GetBounds(l));
             int j = 0;
             GameObject[] cornerSpheres;
             if (!spheresInit)
@@ -387,7 +414,7 @@ public class Baseline : MonoBehaviour
         int i = 0;
         foreach (var l in labels)
         {
-            Vector3[] lMiddles = Middles(l.GetComponent<Renderer>());
+            Vector3[] lMiddles = Middles(GetBounds(l));
             int j = 0;
             GameObject[] middleSpheres;
             if (!spheresInit)

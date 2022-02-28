@@ -52,6 +52,7 @@ public class RVOplayer : MonoBehaviour
         {
             currentStep = idx;
             transform.localPosition = _positions[idx];
+            // player.transform.position = transform.TransformPoint(_positions[idx]);
             player.transform.forward = velocities[idx].normalized;
         }
     }

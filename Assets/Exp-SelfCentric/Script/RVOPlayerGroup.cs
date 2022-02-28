@@ -11,6 +11,7 @@ public class RVOPlayerGroup : MonoBehaviour
     public GameObject playerLabel_prefab;
     public Sprite redLabel;
     public Sprite blueLabel;
+    public Baseline b;
 
     public Transform court;
     public Camera cam;
@@ -49,9 +50,15 @@ public class RVOPlayerGroup : MonoBehaviour
 
         var positions = GetPos();
         int maxPlayers = Mathf.Min(positions.Count(), 20);
+
+        List<GameObject> labelGroups = new List<GameObject>(),
+            labels = new List<GameObject>();
+
         for(int i = 0; i < maxPlayers; ++i)
         {
-            CreatePlayerLabelFromPos(i, positions[i].ToArray());
+            var playerLab = CreatePlayerLabelFromPos(i, positions[i].ToArray());
+            labelGroups.Add(playerLab.Item1);
+            labels.Add(playerLab.Item2);
         }
         // max velocity
         Vector3 maxVel = Vector3.zero;
@@ -70,6 +77,8 @@ public class RVOPlayerGroup : MonoBehaviour
         Debug.Log("Min Vel:" + minVel.ToString());
         m_RVOSettings.playerSpeedX = maxVel.x - minVel.x;
         m_RVOSettings.playerSppedZ = maxVel.z - minVel.z;
+
+        b.InitFrom(labelGroups, labels);
     }
 
     public Vector3 GetRandomSpawnPos(int idx)
@@ -99,26 +108,24 @@ public class RVOPlayerGroup : MonoBehaviour
         return randomSpawnPos;
     }
 
-    public void CreatePlayerLabelFromPos(int sid, Vector3[] positions)
+    public (GameObject, GameObject) CreatePlayerLabelFromPos(int sid, Vector3[] positions)
     {
 
-        GameObject playerObj = Instantiate(playerLabel_prefab, positions[0], Quaternion.identity);
+        GameObject playerObj = Instantiate(playerLabel_prefab, Vector3.zero, Quaternion.identity);
         playerObj.transform.SetParent(gameObject.transform, false);
         playerObj.name = sid + "_PlayerLabel";
 
-        var text = playerObj.transform.Find("player/BackCanvas/Text").GetComponent<TMPro.TextMeshProUGUI>();
+        var text = playerObj.transform.Find("player_parent/player/BackCanvas/Text").GetComponent<TMPro.TextMeshProUGUI>();
         text.text = sid.ToString();
-        text = playerObj.transform.Find("player/TopCanvas/Text").GetComponent<TMPro.TextMeshProUGUI>();
+        text = playerObj.transform.Find("player_parent/player/TopCanvas/Text").GetComponent<TMPro.TextMeshProUGUI>();
         text.text = sid.ToString();
 
-        RVOplayer player = playerObj.GetComponent<RVOplayer>();
+        RVOplayer player = playerObj.GetComponentInChildren<RVOplayer>();
         player.positions = positions;
 
         player.sid = sid;
         m_playerMap.Add(player);
 
-
-        /*
         Transform label = playerObj.gameObject.transform.Find("label");
         label.name = sid + "_label";
 
@@ -135,7 +142,8 @@ public class RVOPlayerGroup : MonoBehaviour
             var cubeRenderer = player.player.GetComponent<Renderer>();
             cubeRenderer.material.SetColor("_Color", color);
         }
-        */
+
+        return (playerObj, label.gameObject);
     }
 
     // Update is called once per frame
@@ -143,7 +151,7 @@ public class RVOPlayerGroup : MonoBehaviour
 
     private float time = 0.0f;
     private float timeStep = 0.04f;
-    List<Metrics> metrics = new List<Metrics>();
+
     private void FixedUpdate()
     {
         time += Time.fixedDeltaTime;
@@ -161,27 +169,6 @@ public class RVOPlayerGroup : MonoBehaviour
         else
         {
             currentStep = 0;
-            // reset all 
-            m_playerMap.ForEach(p => p.GetComponentInChildren<RVOLabelAgent>().SyncReset());
-        }
-
-        // -----------> EVALUATION <------------ save occlusion rate
-        // calculate occlusion rate here
-        if (false)
-        //if (m_RVOSettings.evaluate)
-        {
-            GameObject[] occluded = m_playerMap
-                .SelectMany(p => p.GetComponentInChildren<RVOLabelAgent>().occluding())
-                .Distinct().ToArray();
-
-            int numOfOcclusion = occluded
-                .Count();
-
-            Metrics m = new Metrics();
-            m.occlusionRate = (float)numOfOcclusion / (2 * m_RVOSettings.numOfPlayer - 1);
-            int numOfIntersection = (int) (m_playerMap.Sum(p => p.GetComponentInChildren<RVOLabelAgent>().numOfIntersection()) * 0.5f);
-            m.intersections = numOfIntersection;
-            metrics.Add(m);
         }
     }
 

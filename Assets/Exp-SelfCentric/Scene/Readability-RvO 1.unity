@@ -139,7 +139,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &202665124
 Transform:
   m_ObjectHideFlags: 0
@@ -147,7 +147,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 202665123}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -325,10 +325,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2529f3623962a844a4ab61efdc0df74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerLabel_prefab: {fileID: 4009644357339790710, guid: 87e4edaa1b4d244b0a0889e7beed4ed9,
+  playerLabel_prefab: {fileID: 4009644357339790710, guid: 375240f6cadf14a19978a10ac8f49f8b,
     type: 3}
   redLabel: {fileID: 21300000, guid: 04cda55ab2885c542831667cfa564c54, type: 3}
   blueLabel: {fileID: 21300000, guid: 17ebe7c5b60aad24eb04093b8031dee5, type: 3}
+  b: {fileID: 202665125}
   court: {fileID: 0}
   cam: {fileID: 0}
   totalStep: 0
@@ -2586,7 +2587,7 @@ GameObject:
   - component: {fileID: 6991138097231957236}
   m_Layer: 0
   m_Name: Camera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
