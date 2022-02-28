@@ -179,6 +179,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 78a43f6bebe9e4c39923320bb2936372, type: 2}
   - {fileID: 2100000, guid: 9c5b84bb045454df08b64694f5f1c790, type: 2}
   - {fileID: 2100000, guid: f5f952c9a69e04a1aa353a92bb558d91, type: 2}
+  hideSpheres: 1
   algo: 0
 --- !u!1 &365723530
 GameObject:
@@ -1519,7 +1520,7 @@ BoxCollider:
   m_GameObject: {fileID: 2088034915338185580}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Size: {x: 19.28871, y: 0, z: 18.131922}
   m_Center: {x: 0, y: 0, z: 9.065961}
@@ -1751,7 +1752,7 @@ BoxCollider:
   m_GameObject: {fileID: 2088034915737257526}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Size: {x: 19.28871, y: 0, z: 18.131922}
   m_Center: {x: 0, y: 0, z: 9.065961}

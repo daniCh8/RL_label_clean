@@ -180,11 +180,13 @@ public class Baseline : MonoBehaviour
                     // Debug.LogFormat("{0} collided with --> name: {1}, tag: {2}",
                         // t.name, hit.collider.name, hit.collider.tag);
                 }
-                if (hit.transform.gameObject.name != myName)
+                if (hit.transform.gameObject.name != myName &&
+                    !hit.transform.CompareTag("ground"))
                 {
-                    if (!hit.collider.name.StartsWith("label"))
+                    if (!hit.collider.CompareTag("label") &&
+                        !hit.collider.CompareTag("player"))
                     {
-                        // Debug.LogFormat("name: {0}, tag: {1}", hit.collider.name, hit.collider.tag);
+                        Debug.LogFormat("name: {0}, tag: {1}", hit.collider.name, hit.collider.tag);
                     }
                     return true;
                 }
