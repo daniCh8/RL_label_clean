@@ -106,7 +106,7 @@ public class Baseline : MonoBehaviour
         negativeStep = -1 * step;
         foreach (var l in labelGroups)
         {
-            l.GetComponentInChildren<LabelFollowPlayer>().followX = (algo == 0);
+            l.GetComponentInChildren<LabelFollowPlayer>().followX = (algo == UpdateAlgo.OneDim);
         }
         spheresInit = false;
         labelsCorners = new List<GameObject[]>();
