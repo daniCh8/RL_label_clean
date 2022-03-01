@@ -10,11 +10,19 @@ public class Baseline : MonoBehaviour
     public Material lower, upper, center;
     public Material[] middleMats;
     private List<GameObject[]> labelsCorners, labelsMiddles;
-    private Vector3 sphereScale = new Vector3(.3f, .3f, .3f);
-    private bool spheresInit = false, toInit = false;
-    public bool hideSpheres;
+    private Vector3 sphereScale = new Vector3(.3f, .3f, .3f),
+        planeScale = new Vector3(.4f, .4f, .4f);
+    private bool spheresInit = false, planesInit = false, toInit = false;
+    public bool hideSpheres, hidePlanes;
     private float yThreshold = 3f, step = .2f, bigStep = 2f,
         positiveStep, negativeStep, movementSpeed = .25f;
+
+    private struct PlanePlayer
+    {
+        public GameObject player;
+        public GameObject plane;
+    }
+    private List<PlanePlayer> planes;
 
     public enum UpdateAlgo
     {
@@ -53,6 +61,7 @@ public class Baseline : MonoBehaviour
                 LabelsAlgorithmThreeDim();
                 break;
             case UpdateAlgo.PlaneBased:
+                UpdatePlanes();
                 LabelsAlgorithmOneDim();
                 break;
         }
@@ -113,6 +122,12 @@ public class Baseline : MonoBehaviour
         labelsMiddles = new List<GameObject[]>();
         UpdateSpheres();
         spheresInit = true;
+
+        if (algo == UpdateAlgo.PlaneBased)
+        {
+            CreatePlanes();
+            planesInit = true;
+        }
     }
 
     public void ResetPositions()
@@ -363,6 +378,50 @@ public class Baseline : MonoBehaviour
             new Vector3(max.x, mid_y, z)
         };
         return middles;
+    }
+
+    private void CreatePlanes()
+    {
+        planes = new List<PlanePlayer>();
+        for (int i = 0; i < labelGroups.Count; i++)
+        {
+            GameObject l = labels[i], lG = labelGroups[i];
+
+            GameObject player = lG.transform.Find("player_parent/player").gameObject,
+                plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            Destroy(plane.GetComponent<MeshCollider>());
+            plane.transform.parent = l.transform.parent;
+            if (hidePlanes)
+            {
+                plane.transform.localScale = Vector3.zero;
+            }
+            else
+            {
+                plane.transform.localScale = planeScale;
+            }
+            plane.name = string.Format("plane_{0}", i);
+            PlanePlayer pp = new PlanePlayer();
+            pp.player = player;
+            pp.plane = plane;
+            planes.Add(pp);
+        }
+    }
+
+    private void UpdatePlanes()
+    {
+        if(!planesInit)
+        {
+            CreatePlanes();
+        }
+
+        foreach (var pp in planes)
+        {
+            pp.plane.transform.position =
+                pp.player.GetComponent<Renderer>().bounds.center;
+            Vector3 dir = pp.plane.GetComponent<Renderer>().bounds.center -
+            Camera.main.transform.position;
+            pp.plane.transform.up = -dir;
+        }
     }
 
     private void UpdateCornerSpheres()
