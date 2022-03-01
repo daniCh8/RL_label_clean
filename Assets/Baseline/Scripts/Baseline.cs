@@ -11,7 +11,7 @@ public class Baseline : MonoBehaviour
     public Material[] middleMats;
     private List<GameObject[]> labelsCorners, labelsMiddles;
     private Vector3 sphereScale = new Vector3(.3f, .3f, .3f),
-        planeScale = new Vector3(.4f, .4f, .4f);
+        planeScale = new Vector3(.8f, .8f, .8f);
     private bool spheresInit = false, planesInit = false, toInit = false;
     public bool hideSpheres, hidePlanes;
     private float yThreshold = 3f, step = .2f, bigStep = 2f,
@@ -20,7 +20,7 @@ public class Baseline : MonoBehaviour
     private struct PlanePlayer
     {
         public GameObject player, plane,
-            sphereUp, sphereForward, sphereRight, sphereCt;
+            sphereUp, sphereForward, sphereRight, sphereCt; // forward: y; right: x;
     }
     private List<PlanePlayer> planes;
 
@@ -58,11 +58,11 @@ public class Baseline : MonoBehaviour
                 LabelsAlgorithmOneDim();
                 break;
             case UpdateAlgo.ThreeDim:
-                LabelsAlgorithmThreeDim();
+                LabelsAlgorithmThreeDimPlane(false);
                 break;
             case UpdateAlgo.PlaneBased:
                 UpdatePlanes();
-                LabelsAlgorithmOneDim();
+                LabelsAlgorithmThreeDimPlane(true);
                 break;
         }
     }
@@ -139,11 +139,11 @@ public class Baseline : MonoBehaviour
         UpdateSpheres();
     }
 
-    private void LabelsAlgorithmThreeDim()
+    private void LabelsAlgorithmThreeDimPlane(bool isPlane)
     {
         for (int i = 0; i < labels.Count; i++)
         {
-            AdjustLabelThreeDim(i);
+            AdjustLabelThreeDimPlane(i, isPlane);
         }
     }
 
@@ -210,7 +210,87 @@ public class Baseline : MonoBehaviour
         return false;
     }
 
-    private void AdjustLabelThreeDim(int lId)
+    private (float, float) ComputeUpdatesFromHits(int cornerHit, bool[] middleHits)
+    {
+        float yUpdate = 0f, xUpdate = 0f;
+        switch (cornerHit)
+        {
+            case 0:
+                if (middleHits[0] == middleHits[3])
+                {
+                    yUpdate = negativeStep;
+                    xUpdate = positiveStep;
+                }
+                else if (middleHits[0])
+                {
+                    yUpdate = positiveStep;
+                    xUpdate = 0f;
+                }
+                else if (middleHits[3])
+                {
+                    yUpdate = 0f;
+                    xUpdate = negativeStep;
+                }
+                break;
+            case 1:
+                if (middleHits[0] == middleHits[1])
+                {
+                    yUpdate = positiveStep;
+                    xUpdate = positiveStep;
+                }
+                else if (middleHits[0])
+                {
+                    yUpdate = positiveStep;
+                    xUpdate = 0f;
+                }
+                else if (middleHits[1])
+                {
+                    yUpdate = 0f;
+                    xUpdate = positiveStep;
+                }
+                break;
+            case 2:
+                if (middleHits[1] == middleHits[2])
+                {
+                    yUpdate = negativeStep;
+                    xUpdate = positiveStep;
+                }
+                else if (middleHits[1])
+                {
+                    yUpdate = 0f;
+                    xUpdate = positiveStep;
+                }
+                else if (middleHits[2])
+                {
+                    yUpdate = negativeStep;
+                    xUpdate = 0f;
+                }
+                break;
+            case 3:
+                if (middleHits[2] == middleHits[3])
+                {
+                    yUpdate = negativeStep;
+                    xUpdate = negativeStep;
+                }
+                else if (middleHits[2])
+                {
+                    yUpdate = negativeStep;
+                    xUpdate = 0f;
+                }
+                else if (middleHits[3])
+                {
+                    yUpdate = 0f;
+                    xUpdate = negativeStep;
+                }
+                break;
+            default:
+                Debug.Log("Error. Hit found but no switch case entered.");
+                break;
+        }
+        return (xUpdate, yUpdate);
+    }
+
+    private void AdjustLabelThreeDimPlane(int lId, bool isPlane)
     {
         float yUpdate = 0, xUpdate = 0;
         bool draw = lId == 0 ? true : false;
@@ -227,97 +307,48 @@ public class Baseline : MonoBehaviour
             else if ((yUpdate == bigStep && cornerHit != 4) || (yUpdate == 0 && xUpdate == 0))
             {
                 bool[] middleHits = CheckHitFromMiddles(labelsMiddles[lId], labels[lId].name, draw);
-                switch (cornerHit)
-                {
-                    case 0:
-                        if (middleHits[0] == middleHits[3])
-                        {
-                            yUpdate = negativeStep;
-                            xUpdate = positiveStep;
-                        }
-                        else if (middleHits[0])
-                        {
-                            yUpdate = positiveStep;
-                            xUpdate = 0f;
-                        }
-                        else if (middleHits[3])
-                        {
-                            yUpdate = 0f;
-                            xUpdate = negativeStep;
-                        }
-                        break;
-                    case 1:
-                        if (middleHits[0] == middleHits[1])
-                        {
-                            yUpdate = positiveStep;
-                            xUpdate = positiveStep;
-                        }
-                        else if (middleHits[0]) {
-                            yUpdate = positiveStep;
-                            xUpdate = 0f;
-                        }
-                        else if (middleHits[1])
-                        {
-                            yUpdate = 0f;
-                            xUpdate = positiveStep;
-                        }
-                        break;
-                    case 2:
-                        if(middleHits[1] == middleHits[2])
-                        {
-                            yUpdate = negativeStep;
-                            xUpdate = positiveStep;
-                        }
-                        else if(middleHits[1])
-                        {
-                            yUpdate = 0f;
-                            xUpdate = positiveStep;
-                        }
-                        else if(middleHits[2])
-                        {
-                            yUpdate = negativeStep;
-                            xUpdate = 0f;
-                        }
-                        break;
-                    case 3:
-                        if(middleHits[2] == middleHits[3])
-                        {
-                            yUpdate = negativeStep;
-                            xUpdate = negativeStep;
-                        }
-                        else if (middleHits[2])
-                        {
-                            yUpdate = negativeStep;
-                            xUpdate = 0f;
-                        }
-                        else if(middleHits[3])
-                        {
-                            yUpdate = 0f;
-                            xUpdate = negativeStep;
-                        }
-                        break;
-                    default:
-                        Debug.Log("Error. Hit found but no switch case entered.");
-                        break;
-                }
+                var updateTuple = ComputeUpdatesFromHits(cornerHit, middleHits);
+                xUpdate = updateTuple.Item1;
+                yUpdate = updateTuple.Item2;
             }
             yUpdate = oldPosition.y < 1f ? bigStep : yUpdate;
-            Movement(labels[lId], xUpdate, yUpdate);
+            if(isPlane)
+            {
+                MovementWithPlane(labels[lId], planes[lId], xUpdate, yUpdate);
+            } else
+            {
+                MovementWithUpdates(labels[lId], xUpdate, yUpdate);
+            }
             UpdateSpheres();
             cornerHit = CheckHitFromCorners(labelsCorners[lId], labels[lId].name, draw);
             counter--;
         }
     }
 
-    private void Movement(GameObject obj, float xUpdate, float yUpdate)
+    private void MovementHelper(GameObject obj, Vector3 targetPos)
     {
-        Vector3 oldPosition = obj.transform.position;
-        Vector3 targetPos = new Vector3(
-                oldPosition.x + xUpdate,
-                oldPosition.y + yUpdate,
-                oldPosition.z);
+        Vector3 oldPos = obj.transform.position;
         float step = movementSpeed * Time.deltaTime;
-        obj.transform.position = Vector3.MoveTowards(oldPosition, targetPos, step);
+        obj.transform.position = Vector3.MoveTowards(oldPos, targetPos, step);
+    }
+
+    private void MovementWithPlane(GameObject obj, PlanePlayer pp, float xUpdate, float yUpdate)
+    {
+        Vector3 oldPos = obj.transform.position;
+        Vector3 targetPos = oldPos +
+            (xUpdate * pp.plane.transform.right) +
+            (yUpdate * pp.plane.transform.forward);
+        MovementHelper(obj, targetPos);
+    }
+
+    private void MovementWithUpdates(GameObject obj, float xUpdate, float yUpdate)
+    {
+        Vector3 oldPos = obj.transform.position;
+        Vector3 targetPos = new Vector3(
+                oldPos.x + xUpdate,
+                oldPos.y + yUpdate,
+                oldPos.z);
+        MovementHelper(obj, targetPos);
     }
 
     private void AdjustLabelOneDim(int lId)
@@ -338,7 +369,7 @@ public class Baseline : MonoBehaviour
             }
             Vector3 oldPosition = labels[lId].transform.position;
             yUpdate = oldPosition.y < 1f ? bigStep : yUpdate;
-            Movement(labels[lId], 0f, yUpdate);
+            MovementWithUpdates(labels[lId], 0f, yUpdate);
             UpdateSpheres();
             cornerHit = CheckHitFromCorners(labelsCorners[lId], labels[lId].name, draw);
             counter--;
