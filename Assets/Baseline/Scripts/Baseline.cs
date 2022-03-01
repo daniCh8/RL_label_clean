@@ -7,7 +7,7 @@ public class Baseline : MonoBehaviour
 {
     public GameObject labelPrefab;
     public List<GameObject> labelGroups, labels;
-    public Material lower, upper, center;
+    public Material lower, upper, center, planeDirs;
     public Material[] middleMats;
     private List<GameObject[]> labelsCorners, labelsMiddles;
     private Vector3 sphereScale = new Vector3(.3f, .3f, .3f),
@@ -19,8 +19,8 @@ public class Baseline : MonoBehaviour
 
     private struct PlanePlayer
     {
-        public GameObject player;
-        public GameObject plane;
+        public GameObject player, plane,
+            sphereUp, sphereForward, sphereRight, sphereCt;
     }
     private List<PlanePlayer> planes;
 
@@ -380,6 +380,20 @@ public class Baseline : MonoBehaviour
         return middles;
     }
 
+    private GameObject CreateSphereDir(string name, Transform parent)
+    {
+        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        Destroy(sphere.GetComponent<SphereCollider>());
+        sphere.transform.localScale = hidePlanes ?
+            Vector3.zero : sphereScale;
+        sphere.GetComponent<Renderer>().material = planeDirs;
+        sphere.transform.parent = parent;
+        string sphereName = name;
+        sphere.name = sphereName;
+
+        return sphere;
+    }
+
     private void CreatePlanes()
     {
         planes = new List<PlanePlayer>();
@@ -387,22 +401,31 @@ public class Baseline : MonoBehaviour
         {
             GameObject l = labels[i], lG = labelGroups[i];
 
-            GameObject player = lG.transform.Find("player_parent/player").gameObject,
-                plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            GameObject player = lG.transform.Find("player_parent/player").gameObject;
+
+            GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
             Destroy(plane.GetComponent<MeshCollider>());
             plane.transform.parent = l.transform.parent;
-            if (hidePlanes)
-            {
-                plane.transform.localScale = Vector3.zero;
-            }
-            else
-            {
-                plane.transform.localScale = planeScale;
-            }
+            plane.transform.localScale = hidePlanes ? Vector3.zero :
+                planeScale;
+            
+
             plane.name = string.Format("plane_{0}", i);
             PlanePlayer pp = new PlanePlayer();
             pp.player = player;
             pp.plane = plane;
+            pp.sphereCt = CreateSphereDir(
+                string.Format("plane_center_sphere_{0}", i),
+                pp.plane.transform);
+            pp.sphereForward = CreateSphereDir(
+                string.Format("plane_forward_sphere_{0}", i),
+                pp.plane.transform);
+            pp.sphereRight = CreateSphereDir(
+                string.Format("plane_right_sphere_{0}", i),
+                pp.plane.transform);
+            pp.sphereUp = CreateSphereDir(
+                string.Format("plane_up_sphere_{0}", i),
+                pp.plane.transform);
             planes.Add(pp);
         }
     }
@@ -421,6 +444,18 @@ public class Baseline : MonoBehaviour
             Vector3 dir = pp.plane.GetComponent<Renderer>().bounds.center -
             Camera.main.transform.position;
             pp.plane.transform.up = -dir;
+
+            pp.sphereCt.transform.position =
+                pp.plane.GetComponent<Renderer>().bounds.center;
+            pp.sphereForward.transform.position =
+                pp.sphereCt.transform.position +
+                pp.plane.transform.forward;
+            pp.sphereRight.transform.position =
+                pp.sphereCt.transform.position +
+                pp.plane.transform.right;
+            pp.sphereUp.transform.position =
+                pp.sphereCt.transform.position +
+                pp.plane.transform.up;
         }
     }
 

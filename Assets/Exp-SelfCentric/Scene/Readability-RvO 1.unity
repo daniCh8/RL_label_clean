@@ -174,6 +174,7 @@ MonoBehaviour:
   lower: {fileID: 2100000, guid: 9cf0fcbbd290440fda8127b624f51b8d, type: 2}
   upper: {fileID: 2100000, guid: c9227761d090d4447add52630896982c, type: 2}
   center: {fileID: 2100000, guid: 58f122b5e8e6e4bd8ac6670eebc09927, type: 2}
+  planeDirs: {fileID: 2100000, guid: 85e654211e93c4c51bcc27ea4d6d527d, type: 2}
   middleMats:
   - {fileID: 2100000, guid: fcd829770d5274c919ffae19b16132b9, type: 2}
   - {fileID: 2100000, guid: 78a43f6bebe9e4c39923320bb2936372, type: 2}
