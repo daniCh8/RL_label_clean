@@ -181,7 +181,8 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 9c5b84bb045454df08b64694f5f1c790, type: 2}
   - {fileID: 2100000, guid: f5f952c9a69e04a1aa353a92bb558d91, type: 2}
   hideSpheres: 1
-  hidePlanes: 1
+  hidePlanes: 0
+  hidePlaneSpheres: 1
   algo: 2
 --- !u!1 &365723530
 GameObject:

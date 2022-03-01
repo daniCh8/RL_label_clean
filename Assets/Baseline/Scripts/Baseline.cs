@@ -13,9 +13,10 @@ public class Baseline : MonoBehaviour
     private Vector3 sphereScale = new Vector3(.3f, .3f, .3f),
         planeScale = new Vector3(.8f, .8f, .8f);
     private bool spheresInit = false, planesInit = false, toInit = false;
-    public bool hideSpheres, hidePlanes;
+    public bool hideSpheres, hidePlanes, hidePlaneSpheres;
     private float yThreshold = 3f, step = .2f, bigStep = 2f,
         positiveStep, negativeStep, movementSpeed = .25f;
+    private List<(float, float)> planeXY;
 
     private struct PlanePlayer
     {
@@ -62,6 +63,7 @@ public class Baseline : MonoBehaviour
                 break;
             case UpdateAlgo.PlaneBased:
                 UpdatePlanes();
+                UpdateLabsFromXY();
                 LabelsAlgorithmThreeDimPlane(true);
                 break;
         }
@@ -120,14 +122,20 @@ public class Baseline : MonoBehaviour
         spheresInit = false;
         labelsCorners = new List<GameObject[]>();
         labelsMiddles = new List<GameObject[]>();
-        UpdateSpheres();
-        spheresInit = true;
 
         if (algo == UpdateAlgo.PlaneBased)
         {
             CreatePlanes();
             planesInit = true;
+            planeXY = new List<(float, float)>();
+            for (int i = 0; i < labelGroups.Count; i++)
+            {
+                planeXY.Add((0f, 1f));
+            }
         }
+
+        UpdateSpheres();
+        spheresInit = true;
     }
 
     public void ResetPositions()
@@ -314,7 +322,10 @@ public class Baseline : MonoBehaviour
             yUpdate = oldPosition.y < 1f ? bigStep : yUpdate;
             if(isPlane)
             {
-                MovementWithPlane(labels[lId], planes[lId], xUpdate, yUpdate);
+                var xyUpdate = planeXY[lId];
+                planeXY[lId] = (xyUpdate.Item1 + xUpdate,
+                    xyUpdate.Item2 + yUpdate);
+                MovementWithPlane(labels[lId], planes[lId], planeXY[lId].Item1, planeXY[lId].Item2);
             } else
             {
                 MovementWithUpdates(labels[lId], xUpdate, yUpdate);
@@ -334,7 +345,7 @@ public class Baseline : MonoBehaviour
 
     private void MovementWithPlane(GameObject obj, PlanePlayer pp, float xUpdate, float yUpdate)
     {
-        Vector3 oldPos = obj.transform.position;
+        Vector3 oldPos = pp.sphereCt.transform.position;
         Vector3 targetPos = oldPos +
             (xUpdate * pp.plane.transform.right) +
             (yUpdate * pp.plane.transform.forward);
@@ -415,7 +426,7 @@ public class Baseline : MonoBehaviour
     {
         GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         Destroy(sphere.GetComponent<SphereCollider>());
-        sphere.transform.localScale = hidePlanes ?
+        sphere.transform.localScale = hidePlaneSpheres ?
             Vector3.zero : sphereScale;
         sphere.GetComponent<Renderer>().material = planeDirs;
         sphere.transform.parent = parent;
@@ -487,6 +498,14 @@ public class Baseline : MonoBehaviour
             pp.sphereUp.transform.position =
                 pp.sphereCt.transform.position +
                 pp.plane.transform.up;
+        }
+    }
+
+    private void UpdateLabsFromXY()
+    {
+        for (int lId = 0; lId < labelGroups.Count; lId++)
+        {
+            MovementWithPlane(labels[lId], planes[lId], planeXY[lId].Item1, planeXY[lId].Item2);
         }
     }
 
