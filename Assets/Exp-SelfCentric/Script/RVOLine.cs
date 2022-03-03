@@ -25,12 +25,21 @@ public class RVOLine : MonoBehaviour
         image.color = new Color(0.0F, 1.0F, 0.0F, 0.2f);
     }
 
+    public float GetLineLength()
+    {
+        return Vector3.Distance(line.GetPosition(0), line.GetPosition(1));
+    }
+
     // Update is called once per frame
     void Update()
     {
         Vector3 start = new Vector3(transform.position.x, transform.position.y - yOffset, transform.position.z);
         line.SetPosition(0, start);
         line.SetPosition(1, end.position);
+
+        //debug
+        // float distance = Vector3.Distance(start, end.position);
+        // Debug.LogFormat("{0} length = {1}", debugPoint.name, distance);
     }
 
     Vector3[] points()
