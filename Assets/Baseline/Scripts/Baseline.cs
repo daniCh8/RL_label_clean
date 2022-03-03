@@ -647,8 +647,17 @@ public class Baseline : MonoBehaviour
     private void LabelRealignment(int lId)
     {
         if (!CheckLowerCounts(lId, lineThresh) && IsLineEmpty(lId))
-            MovementHelper(labels[lId],
+        {
+            if (algo == UpdateAlgo.PlaneBased)
+            {
+                // var xyUpdate = planeXY[lId];
+                planeXY[lId] = (1f, 1f);
+                MovementWithPlane(labels[lId], planes[lId], planeXY[lId].Item1, planeXY[lId].Item2);
+            }
+            else
+                MovementHelper(labels[lId],
                 GetPlayerFromLId(lId).GetComponent<Renderer>().bounds.center);
+        }
     }
 
     private void LabelRealignmentHelper()

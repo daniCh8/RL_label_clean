@@ -183,7 +183,7 @@ MonoBehaviour:
   hideSpheres: 1
   hidePlanes: 1
   hidePlaneSpheres: 1
-  algo: 0
+  algo: 2
 --- !u!1 &365723530
 GameObject:
   m_ObjectHideFlags: 0
