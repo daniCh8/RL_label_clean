@@ -14,7 +14,8 @@ public class Baseline : MonoBehaviour
         planeScale = new Vector3(.8f, .8f, .8f);
     private bool spheresInit = false, planesInit = false, toInit = false;
     public bool hideSpheres, hidePlanes, hidePlaneSpheres;
-    private float yThreshold = 3f, step = .2f, bigStep = 2f, lineThresh = 3f,
+    private float yThreshold = 3f, step = .2f, bigStep = 2f,
+        lineMax = 3f, lineThresh = 2f,
         positiveStep, negativeStep, movementSpeed = .25f;
     private List<(float, float)> planeXY;
 
@@ -47,6 +48,7 @@ public class Baseline : MonoBehaviour
             return;
         }
         UpdateSpheres();
+        LabelRealignmentHelper();
 
         foreach (var l in labels)
         {
@@ -190,7 +192,7 @@ public class Baseline : MonoBehaviour
         return hits;
     }
 
-    private bool CheckHit(Renderer r, Transform t, string myName, bool draw)
+    private bool CheckHit(Renderer r, Transform t, string myName, bool draw = false)
     {
         if (r.isVisible)
         {
@@ -304,7 +306,7 @@ public class Baseline : MonoBehaviour
         float yUpdate = 0, xUpdate = 0;
         bool draw = lId == 0 ? true : false;
         int cornerHit = CheckHitFromCorners(labelsCorners[lId], labels[lId].name,
-            draw, CheckLowerCounts(lId)),
+            draw, CheckLowerCounts(lId, lineMax)),
             counter = 10;
         while(cornerHit != -1 && counter > 0)
         {
@@ -334,7 +336,7 @@ public class Baseline : MonoBehaviour
             }
             UpdateSpheres();
             cornerHit = CheckHitFromCorners(labelsCorners[lId], labels[lId].name,
-                draw, CheckLowerCounts(lId));
+                draw, CheckLowerCounts(lId, lineMax));
             counter--;
         }
     }
@@ -365,11 +367,12 @@ public class Baseline : MonoBehaviour
         MovementHelper(obj, targetPos);
     }
 
-    private bool CheckLowerCounts(int lId)
+    private bool CheckLowerCounts(int lId, float threshold, bool debug = true)
     {
         float lL = labelGroups[lId].GetComponentInChildren<RVOLine>().GetLineLength();
-        Debug.LogFormat("{0} lower counts: {1} - length: {2}", lId, (lL < lineThresh), lL);
-        return (lL < lineThresh);
+        if(debug && (lL > lineMax))
+            Debug.LogFormat("{0} lower counts: {1} - length: {2}", lId, (lL < lineMax), lL);
+        return (lL < threshold);
     }
 
     private void AdjustLabelOneDim(int lId)
@@ -377,7 +380,7 @@ public class Baseline : MonoBehaviour
         float yUpdate = 8;
         bool draw = lId == 0 ? true : false;
         int cornerHit = CheckHitFromCorners(labelsCorners[lId], labels[lId].name,
-            draw, CheckLowerCounts(lId)),
+            draw, CheckLowerCounts(lId, lineMax)),
             counter = 10;
         while (cornerHit != -1 && counter > 0)
         {
@@ -394,7 +397,7 @@ public class Baseline : MonoBehaviour
             MovementWithUpdates(labels[lId], 0f, yUpdate);
             UpdateSpheres();
             cornerHit = CheckHitFromCorners(labelsCorners[lId], labels[lId].name,
-                draw, CheckLowerCounts(lId));
+                draw, CheckLowerCounts(lId, lineMax));
             counter--;
         }
     }
@@ -608,6 +611,51 @@ public class Baseline : MonoBehaviour
             {
                 labelsMiddles.Add(middleSpheres);
             }
+        }
+    }
+
+    private GameObject GetPlayerFromLId(int lId)
+    {
+        return labelGroups[lId].transform.Find("player_parent/player").gameObject;
+    }
+
+    private bool IsLineEmpty(int lId, bool draw = false)
+    {
+        BoxCollider labelBoxCollider = labels[lId].GetComponentInChildren<BoxCollider>();
+        Vector3 labelPos = labelBoxCollider.bounds.center,
+        playerPos = GetPlayerFromLId(lId).GetComponent<Renderer>().bounds.center;
+
+        RaycastHit hit;
+        Vector3 direction = playerPos - labelPos;
+        if (Physics.Raycast(labelPos, direction, out hit))
+        {
+            if (draw)
+            {
+                Debug.DrawRay(labelPos, direction, Color.yellow);
+                Debug.LogFormat("{0} collided with --> name: {1}, tag: {2}",
+                labelBoxCollider.gameObject.name, hit.collider.name, hit.collider.tag);
+            }
+
+            if (hit.collider.name != GetPlayerFromLId(lId).name)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void LabelRealignment(int lId)
+    {
+        if (!CheckLowerCounts(lId, lineThresh) && IsLineEmpty(lId))
+            MovementHelper(labels[lId],
+                GetPlayerFromLId(lId).GetComponent<Renderer>().bounds.center);
+    }
+
+    private void LabelRealignmentHelper()
+    {
+        for (int i = 0; i < labelGroups.Count; i++)
+        {
+            LabelRealignment(i);
         }
     }
 
